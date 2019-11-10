@@ -1,0 +1,60 @@
+#backGround{
+    position: relative;
+    left:20%;
+    z-index: -1;
+
+}
+#jobReady{
+    position: absolute;
+    left: 35%;
+    top:40%;
+    z-index: 1;
+}
+#jobRun{
+    position: absolute;
+    left: 58%;
+    top: 5%;
+    z-index: 1;
+}
+#jobSuspend{
+    position: absolute;
+    left: 70%;
+    top:30%;
+    z-index: 1;
+}
+.position1{
+    position: absolute;
+    left: 10%;
+    bottom: 1%;
+    z-index: 1;
+}
+.position2{
+    position: absolute;
+    left: 30%;
+    bottom: 1%;
+    z-index: 1;
+}
+.position3{
+    position: absolute;
+    left: 50%;
+    bottom: 1%;
+    z-index: 1;
+}
+.position4{
+    position: absolute;
+    left: 70%;
+    bottom: 1%;
+    z-index: 1;
+}
+.positionT{
+    position: absolute;
+    left: 15%;
+    bottom: 10%;
+    z-index: 1;
+}
+.positionP{
+    position: absolute;
+    left: 51%;
+    bottom: 70%;
+    z-index: 1;
+}

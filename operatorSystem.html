@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Process scheduling</title>
+    <link rel="stylesheet" href="arrow.css">
+    <link rel="stylesheet" href="operatorSystem.css">
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+    <!-- 加载 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
+</head>
+<body>
+<div class="box a1">
+    <div class="arrow-container">
+        <div class="arrow-up"></div>
+        <div class="arrow-down"></div>
+    </div>
+</div>
+<div class="box a2">
+    <div class="arrow-container">
+        <div class="arrow-up"></div>
+        <div class="arrow-down"></div>
+    </div>
+</div>
+<div class="box a3">
+    <div class="arrow-container">
+        <div class="arrow-up"></div>
+        <div class="arrow-down"></div>
+    </div>
+</div>
+<div class="box b1">
+    <div class="arrow-container">
+        <div class="arrow-up"></div>
+        <div class="arrow-down"></div>
+    </div>
+</div>
+<div class="box b2">
+    <div class="arrow-container">
+        <div class="arrow-up"></div>
+        <div class="arrow-down"></div>
+    </div>
+</div>
+<div class="box b3">
+    <div class="arrow-container">
+        <div class="arrow-up"></div>
+        <div class="arrow-down"></div>
+    </div>
+</div>
+<div id="vueRoot" >
+    <table class="table table-hover table-bordered positionT" style="width: 20%;" >
+        <caption style="text-align: center;">PCB Information</caption>
+        <tr>
+            <td class="col-sm-1">PID</td>
+            <td class="col-sm-2">{{showObj.pid}}</td>
+        </tr>
+        <tr>
+            <td class="col-sm-1">Execute Time</td>
+            <td class="col-sm-2">{{showObj.executeTime}}</td>
+        </tr>
+        <tr>
+            <td class="col-sm-1">Priority Level</td>
+            <td class="col-sm-2">{{showObj.priorityLevel}}</td>
+        </tr>
+        <tr>
+            <td class="col-sm-1">Status</td>
+            <td class="col-sm-2">{{showObj.status}}</td>
+        </tr>
+        <tr>
+            <td class="col-sm-1">PCB Pointer</td>
+            <td class="col-sm-2">{{showObj.pointer}}</td>
+        </tr>
+        <tr>
+            <td class="col-sm-1">Occupied Memory</td>
+            <td class="col-sm-2">{{showObj.occupiedMemory}}</td>
+        </tr>
+        <tr>
+            <td class="col-sm-1">Memory Start</td>
+            <td class="col-sm-2">{{showObj.memoryStart}}</td>
+        </tr>
+        <tr>
+            <td class="col-sm-1">Wait Time</td>
+            <td class="col-sm-2">{{showObj.waitTime}}</td>
+        </tr>
+    </table>
+    <table class="table table-hover table-bordered positionP" style="width: 20%;" >
+        <caption style="text-align: center;">Undivided Partition Table</caption>
+        <tr>
+            <td class="col-sm-1">begin</td>
+            <td class="col-sm-1">length</td>
+            <td class="col-sm-1">status</td>
+        </tr>
+        <tr v-for="item in parTable">
+            <td class="col-sm-1">{{item.begin}}</td>
+            <td class="col-sm-2">{{item.length}}</td>
+            <td class="col-sm-2">unallocated</td>
+        </tr>
+
+    </table>
+    <img id="backGround" class="img-circle" src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" alt="Generic placeholder image" width="50%" height="50%">
+    <div id="longTermready" class="col-sm-2">
+        <div class="label label-primary">Long term schedule ready queue</div>
+        <ul class="list-group" id="lready" >
+                <li class="list-group-item" v-for="item in longTermList" @click="showInfo(item)">{{item.pid}}</li>
+        </ul>
+    </div>
+    <div id="longTermrun">
+        <div class="col-sm-2" id="jobReady">
+            <div class="label label-primary">job schedule ready queue</div>
+            <ul class="list-group" >
+                   <li  class="list-group-item" v-for="item in readyList" @click="showInfo(item)">
+                        {{item.pid}}
+                    </li>
+            </ul>
+
+        </div>
+        <div id="jobRun" class="col-sm-2">
+            <div class="label label-primary">job running</div>
+            <ul class="list-group" >
+                <li class="list-group-item" @click="showInfo(executeObj)">{{executeObj.pid}}</li>
+            </ul>
+        </div>
+        <div class="col-sm-2" id="jobSuspend">
+        <div class="label label-primary">job schedule suspend queue</div>
+            <ul class="list-group" >
+
+                    <li class="list-group-item" v-for="item in suspendList" @click="showInfo(item)">{{item.pid}}</li>
+
+            </ul>
+        </div>
+    </div>
+    <button type="button" class="btn btn-lg btn-default position1" @click="timePast">Time past 1s</button>
+    <button type="button" class="btn btn-lg btn-primary position2" data-toggle="modal" data-target="#newProgress">Add new progress</button>
+    <button type="button" class="btn btn-lg btn-success position3"  data-toggle="modal" data-target="#suspendProgress">Suspend a progress</button>
+    <button type="button" class="btn btn-lg btn-info position4" data-toggle="modal" data-target="#resumeProgress">Resume a suspend progress</button>
+    <div class="modal fade" id="newProgress" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Add a new progress</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="pid">PID</label>
+                            <input type="text" class="form-control" id="pid" placeholder="PID" v-model="pid" required="required">
+                        </div>
+                        <div class="form-group">
+                            <label for="executeTime">Execute Time</label>
+                            <input type="text" class="form-control" id="executeTime" placeholder="Execute Time" v-model="executeTime">
+                        </div>
+                        <div class="form-group">
+                            <label for="priorityLevel">Priority Level</label>
+                            <input type="text" class="form-control" id="priorityLevel" placeholder="Priority Level" v-model="priorityLevel">
+                        </div>
+                        <div class="form-group">
+                            <label for="occupiedMemory">Occupied memory</label>
+                            <input type="text" class="form-control" id="occupiedMemory" placeholder="Occupied memory" v-model="occupiedMemory">
+                        </div>
+                        <p class="help-block">Execute time and priority and occupied memory  is only allowed to input the integer number.</p>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" @click="newProgress" data-dismiss="modal">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="suspendProgress" tabindex="-1" role="dialog" aria-labelledby="suspendProgress">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" >Suspend a ready progress</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="pid">PID</label>
+                            <input type="text" class="form-control"  placeholder="PID" v-model="susPid">
+                        </div>
+                        <p class="help-block">Please input the PID, PID is the unique identifier of the process.</p>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" @click="suspendProgress" data-dismiss="modal">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="resumeProgress" tabindex="-1" role="dialog" aria-labelledby="resumeProgress">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" >Resume a suspend progress</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="pid">PID</label>
+                            <input type="text" class="form-control"  placeholder="PID" v-model="resPid">
+                        </div>
+                        <p class="help-block">Please input the PID, PID is the unique identifier of the process.</p>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" @click="resumeProgress" data-dismiss="modal">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script>$(function () {
+    $('[data-toggle="popover"]').popover()
+})</script>
+<script>
+    var app = new Vue(
+        {
+            el:'#vueRoot',
+            data:{
+                resPid:"",
+                susPid:"",
+                pid:"",
+                executeTime:"",
+                priorityLevel:"",
+                occupiedMemory:"",
+                showObj:{},
+                executeObj:{},
+                longTermList:[],
+                readyList:[],
+                suspendList:[],
+                executeNum:0,
+                readyNum:0,
+                suspendNum:0,
+                longTermNum:0,
+                parTable:[{begin:100,
+                            length:400}]
+            },
+            methods: {
+                showInfo:function(item){
+                  this.showObj=item;
+                },
+                newProgress: function (e) {
+                    var r = /^\+?[1-9][0-9]*$/;　　//正整数
+                    if (this.pid == "" || this.executeTime == "" || this.priority == ""||this.occupiedMemory == "") {
+                        alert("Please input the information about the progress");
+                    } else if (!(r.test(this.executeTime) && r.test(this.priorityLevel)&& r.test(this.occupiedMemory))) {
+                        alert("Execute time and the priority level and the occupied memory must be a positive Integer!");
+                    } else {
+                        var progress={};
+                        progress.pid = this.pid;
+                        progress.executeTime = Number(this.executeTime);
+                        progress.priorityLevel = Number(this.priorityLevel);
+                        progress.occupiedMemory = Number(this.occupiedMemory);
+                        var plength=this.parTable.length;
+                        var ifmem=false;
+                        for(let i=0;i<plength;++i){
+                            if(this.parTable[i].length>=progress.occupiedMemory){
+                                progress.memoryStart=this.parTable[i].begin;
+                                this.parTable[i].begin+=progress.occupiedMemory;
+                                this.parTable[i].length-=progress.occupiedMemory;
+                                ifmem=true;
+                                break;
+                            }
+                        }
+                        if(ifmem===false){
+                            alert("There is no enough memory for your process store!!! ");
+                            this.pid="";
+                            this.executeTime="";
+                            this.priorityLevel="";
+                            this.occupiedMemory="";
+                            return;
+                        }
+                        if(this.executeNum+this.readyNum+this.suspendNum<6){
+                                if (this.executeNum==0){
+                                    progress.status="Job schedule Execute";
+                                    progress.waitTime=0;
+                                    this.executeObj=progress;
+                                    this.executeNum=1;
+                                }else{
+                                    progress.status="Job schedule Ready";
+                                    progress.waitTime=0;
+                                    this.readyList.push(progress);
+                                    this.readyNum++;
+                                    this.refreshList(1);
+                                }
+                        }else {
+                            progress.status="Long term schedule Ready";
+                            progress.waitTime=0;
+                            this.longTermList.push(progress);
+                            this.longTermNum++;
+                            this.refreshList(0);
+                        }
+                        this.pid="";
+                        this.executeTime="";
+                        this.priorityLevel="";
+                        this.occupiedMemory="";
+                    }
+                },
+                refreshList:function (num) {
+                    let list = [];
+                    if (num == 0) {
+                        list = this.longTermList;
+                    }
+                    else if (num == 1) {
+                        list = this.readyList;
+                    }
+                    else if (num == 2) {
+                        list = this.suspendList;
+                    }
+                    let length = list.length;
+                    if (length==0)return;
+                    list.sort(this.compare);
+                    for(let i=0;i<length-1;i++){
+                        list[i].pointer=list[i+1].pid;
+                    }
+                    if(num==0){
+                        this.readyList[this.readyNum-1].pointer=list[0].pid;
+                        list[length-1].pointer="";
+                    }
+                    else if (num==1){
+                        if(this.longTermNum!=0){
+                        list[length-1].pointer=this.longTermList[0].pid;
+                        }else {list[length-1].pointer="";}
+                        this.executeObj.pointer=list[0].pid;
+                    }else if (num==2){
+                        list[length-1].pointer="";
+                    }
+                },
+                compare:function (item1,item2) {
+                    return item2.priorityLevel-item1.priorityLevel;
+                },
+                compare2:function (item1,item2) {
+                    return item1.begin-item2.begin;
+                },
+                suspendProgress:function () {
+                    for(let i=0;i<this.readyNum;++i){
+                       if(this.readyList[i].pid==this.susPid){
+                           this.readyNum--;
+                           this.suspendNum++;
+                           this.readyList[i].status="Job schedule Suspend";
+                           this.suspendList.push(this.readyList[i]);
+                           this.readyList.splice(i,1);
+                           i--;
+                           this.refreshList(1);
+                           this.refreshList(2);
+                           this.susPid="";
+                           if(this.readyNum!=0) {
+                               this.executeObj.pointer = this.readyList[0].pid;
+                           }else { this.executeObj.pointer = "";}
+                       }
+                    }
+                },
+                resumeProgress:function () {
+                    for(let i=0;i<this.suspendNum;++i){
+                        if(this.suspendList[i].pid==this.resPid){
+                            this.readyNum++;
+                            this.suspendNum--;
+                            this.suspendList[i].status="Job schedule Ready";
+                            this.readyList.push(this.suspendList[i]);
+                            this.suspendList.splice(i,1);
+                            i--;
+                            this.refreshList(1);
+                            this.refreshList(2);
+                            this.resPid="";
+                            this.executeObj.pointer=this.readyList[0].pid;
+                        }
+                    }
+                },
+                checkmeomery:function(){
+                    var plength2=this.parTable.length-1;
+                  for(let i=0;i<plength2;++i){
+                      if(this.parTable[i].begin+this.parTable[i].length===this.parTable[i+1].begin){
+                          this.parTable[i].length+=this.parTable[i+1].length;
+                          this.parTable.splice(i+1,1);
+                          i--;
+                          plength2--;
+                      }
+                  }
+                },
+                timePast:function () {
+                  this.addWaitTime(0);
+                  this.addWaitTime(1);
+                  this.addWaitTime(2);
+                  this.executeObj.waitTime++;
+                  this.executeObj.executeTime--;
+                  this.refreshList(0);
+                  this.refreshList(1);
+                  this.refreshList(2);
+                  if (this.readyNum==0){this.executeObj.pointer="";}
+                  if(this.executeObj.executeTime<=0){
+                      this.parTable.push({begin:this.executeObj.memoryStart,length:this.executeObj.occupiedMemory});
+                      this.parTable.sort(this.compare2);
+                      this.checkmeomery();
+                      if (this.readyNum>0){this.readyList[0].status="Job schedule Execute";this.executeObj=this.readyList[0];this.readyList.splice(0,1);this.readyNum--;
+                      if (this.longTermNum>0){this.longTermList[0].status="Job schedule Ready";this.readyList.push(this.longTermList[0]);this.longTermList.splice(0,1);this.longTermNum--;this.readyNum++;}
+                      this.refreshList(0);
+                      this.refreshList(1);
+                      }
+                      else {this.executeObj={};this.executeNum=0;}
+
+                  }
+                },
+                addWaitTime:function (num) {
+                    let List;
+                    let number;
+                    if(num==0){List=this.longTermList;number=this.longTermNum;}
+                    else if(num==1){List=this.readyList;number=this.readyNum;}
+                    else if(num==2){List=this.suspendList;number=this.suspendNum;}
+                    for (let i = 0; i <number; ++i) {
+                        List[i].waitTime++;
+                        if (List[i].waitTime == 120){
+                            List[i].priorityLevel+=300;
+                            alert("Since this process which pid is " + List[i].pid + " have waited more than 120 seconds, its priority Level has increased 300.");
+
+                        }
+                        else if (List[i].waitTime ==60){
+                            List[i].priorityLevel+=130;
+                            alert("Since this process which pid is " + List[i].pid + " have waited more than 60 seconds, its priority Level has increased 130.");
+                        }
+                        else if (List[i].waitTime == 30) {
+                            List[i].priorityLevel+=50;
+                            alert("Since this process which pid is " + List[i].pid + " have waited more than 30 seconds, its priority Level has increased 50.");
+                        }
+                        else if (List[i].waitTime ==15) {
+                            List[i].priorityLevel+=10;
+                            alert("Since this process which pid is " + List[i].pid + " have waited more than 15 seconds, its priority Level has increased 10.");
+                        }
+                    }
+                }
+            }
+        }
+
+    )
+</script>
+</html>
